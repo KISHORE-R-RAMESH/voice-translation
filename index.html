@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transcend - Multilingual Voice Translator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Transcend</h1>
+      <p>Multilingual Voice Translator</p>
+    </header>
+
+    <main>
+      <!-- Speech-to-Text Section -->
+      <section class="speech-to-text">
+        <h2>Speech to Text</h2>
+        <form id="speech-to-text-form" enctype="multipart/form-data">
+          <label for="audio">Upload Audio File:</label>
+          <input type="file" id="audio" name="audio" accept="audio/*" required />
+          <button type="submit" class="btn">Convert to Text</button>
+        </form>
+        <div id="transcription-output" class="output"></div>
+      </section>
+
+      <!-- Text-to-Speech Section -->
+      <section class="text-to-speech">
+        <h2>Text to Speech</h2>
+        <form id="text-to-speech-form">
+          <label for="text">Enter Text:</label>
+          <textarea id="text" name="text" rows="4" placeholder="Type your text here..." required></textarea>
+          <button type="submit" class="btn">Convert to Speech</button>
+        </form>
+        <div id="audio-download" class="output"></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>&copy; 2024 Transcend. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Handle Speech-to-Text
+    document.getElementById("speech-to-text-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append("audio", document.getElementById("audio").files[0]);
+
+      try {
+        const response = await fetch("/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const result = await response.json();
+        if (result.files) {
+          document.getElementById("transcription-output").innerHTML = `
+            <p>Transcription completed!</p>
+            <p>Download as 
+              <a href="${result.files.docx}" download class="link">Word</a> or 
+              <a href="${result.files.pdf}" download class="link">PDF</a>
+            </p>
+          `;
+        } else {
+          alert("Failed to transcribe audio.");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Error processing the audio file.");
+      }
+    });
+
+    // Handle Text-to-Speech
+    document.getElementById("text-to-speech-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = document.getElementById("text").value;
+
+      try {
+        const response = await fetch("/text-to-speech", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+
+        const result = await response.json();
+        if (result.audioFile) {
+          document.getElementById("audio-download").innerHTML = `
+            <p>Audio ready for download: 
+              <a href="${result.audioFile}" download class="link">Download Audio</a>
+            </p>
+          `;
+        } else {
+          alert("Failed to convert text to speech.");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Error processing the text.");
+      }
+    });
+  </script>
+</body>
+</html>
